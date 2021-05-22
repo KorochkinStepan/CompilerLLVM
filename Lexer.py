@@ -35,13 +35,14 @@ tokens = [
              'ASSIGN', 'EQUAL',
              'STRING', 'COLON', 'COMA',
              'OPEN', 'CLOSE', 'NUM', 'PLUSMINUS',
-             'MULTIPLE', 'STR', 'SEMICOLON', 'ID', 'COMPARE', 'DOT', 'REALNUM'
+             'MULTIPLE', 'STR', 'SEMICOLON', 'ID', 'COMPARE', 'DOT', 'REALNUM', 'DIVIDE'
          ] + list(reserved.values())
 
 # определим регулярку для абстрактного идетификатора
 ident = r'[a-z]\w*'
 
 # для каждого токена из массива мы должны написать его определение вида t_ИМЯТОКЕНА = регулярка
+t_DIVIDE = r'\/'
 t_DOT = r'\.'
 t_EQUAL = r'\='
 t_COLON = r'\:'
