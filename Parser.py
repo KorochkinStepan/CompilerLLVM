@@ -206,7 +206,7 @@ def p_procedureStatement(p):  # COMPOUNDSTATEMENT / OptionalStatements / stateme
     if len(p) == 1:
         p[0] = Node('Empty', [])
     else:
-        p[0] = Node('Expressions', [p[3]])
+        p[0] = Node('Expressions', [p[1]])
 
 
 
@@ -248,7 +248,8 @@ def p_term(p):
     '''term : factor
             | term MULTIPLE factor
             | term DIV factor
-            | term MOD factor'''
+            | term MOD factor
+            | term DIVIDE factor'''
     if len(p) == 2:
         p[0] = p[1]
     else:
@@ -346,7 +347,7 @@ def getTable(code):
 
 
 def main():
-    print('пошел нахуй быдло')
+    print('ничего')
 
 if __name__ == '__main__':
     main()
