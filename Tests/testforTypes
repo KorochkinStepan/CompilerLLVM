@@ -1,0 +1,21 @@
+program Hello;
+var a,b,c : integer
+var h : real
+
+begin
+
+    h := 10 / 2;
+    write(h);
+    a := 10 mod 2;
+    write(a);
+    h := 10.0 div 2.0;
+    write(h);
+    h := 10.0 mod 1.9;
+    write(h);
+    h := 10 div 2.0;
+    write(h);
+    h := 10.0 div 2;
+    write(h);
+    h := 10 mod 2.0;
+    write(h)
+end.
