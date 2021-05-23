@@ -19,7 +19,7 @@ class Block:
 
 
 bool_ops = {
-    '>', '<', '==', '!=', '>=', '<=', 'and', 'or'
+    '>', '<', '=', '<>', '>=', '<=', 'and', 'or'
 }
 binary_ops = {
     '+': 'add',
@@ -31,8 +31,8 @@ binary_ops = {
     '<=': 'le',
     '>': 'gt',
     '>=': 'ge',
-    '==': 'eq',
-    '!=': 'ne',
+    '=': 'eq',
+    '<>': 'ne',
     'and': 'and',
     'or': 'or',
     '/' : 'div'
@@ -188,6 +188,8 @@ def GenerateCode(parentblock, tree, scope, IsMain , table):
 
 
             elif part.type == 'Assign':
+                if scope.startswith(' '):
+                    scope = scope[1:]
                 exp = []
                 # print(part)
                 name = GenerateForExres(part.parts[1], scope, exp, table)
@@ -207,14 +209,18 @@ def GenerateCode(parentblock, tree, scope, IsMain , table):
                                 #print(vap)
 
                                 tmp1 = new_temp(
-                                    typeconv[table[part.parts[1].parts[0].parts[0]].get(part.parts[0].parts[0])[0]])
+                                    typeconv[table[scope].get(part.parts[0].parts[0])[0]])
                                 vap.append(tmp1)
                                 parentblock.append(tuple(vap))
-                                if (typeconv[table[part.parts[1].parts[0].parts[0]].get(part.parts[0].parts[0])[0]] != typeconv[table[scope].get(part.parts[0].parts[0])[0]]):
+                                if (typeconv[table[scope].get(part.parts[0].parts[0])[0]] != typeconv[table[scope].get(part.parts[0].parts[0])[0]]):
                                     print('ERROR , You are assigning ', typeconv[table[part.parts[1].parts[0].parts[0]].get(part.parts[0].parts[0])[0]], ' to ',
                                           typeconv[table[scope].get(part.parts[0].parts[0])[0]])
+                                    tmp3 = new_temp('float')
+                                    parentblock.append(('convert_to_float', tmp1, tmp3))
+                                    tmp1 = tmp3
+
                                 parentblock.append(('store_' + typeconv[
-                                    table[part.parts[1].parts[0].parts[0]].get(part.parts[0].parts[0])[0]], tmp1,
+                                    table[scope].get(part.parts[0].parts[0])[0]], tmp1,
                                                     part.parts[0].parts[0]))
                         else:
                             nameType = name[2:5]
@@ -224,6 +230,9 @@ def GenerateCode(parentblock, tree, scope, IsMain , table):
                                 parentblock.append(a)
                             if (nameType != typeconv[table[scope].get(part.parts[0].parts[0])[0]]):
                                 print('ERROR , You are assigning ', nameType,' to ', typeconv[table[scope].get(part.parts[0].parts[0])[0]])
+                                tmp3 = new_temp('float')
+                                parentblock.append(('convert_to_float', name, tmp3))
+                                name = tmp3
                             parentblock.append(('store_' + nameType, name, part.parts[0].parts[0]))
                     else:
                         nameType = name[2:5]
@@ -234,8 +243,18 @@ def GenerateCode(parentblock, tree, scope, IsMain , table):
                         if (nameType != typeconv[table[scope].get(part.parts[0].parts[0])[0]]):
                             print('ERROR , You are assigning ', nameType, ' to ',
                                   typeconv[table[scope].get(part.parts[0].parts[0])[0]])
+                            tmp3 = new_temp('float')
+                            parentblock.append(('convert_to_float', name, tmp3))
+                            name = tmp3
                         parentblock.append(('store_' + nameType, name, part.parts[0].parts[0]))
                         # print(2)
+            elif part.type == 'BR':
+                if part.parts[0] == 'break':
+                    parentblock.append(tuple(['break']))
+                if part.parts[0] == 'continue':
+                    parentblock.append(tuple(['continue']))
+
+
             elif part.type == 'Call proc':
                 exp = []
                 exp.append('call_proc')
@@ -273,6 +292,8 @@ def GenerateCode(parentblock, tree, scope, IsMain , table):
 
 
 def GenerateForExres(tree, scope, exp, table):
+    if scope.startswith(' '):
+        scope = scope[1:]
     if type(tree) is not str:
         if tree.type == 'Function':
             # print('тута')
@@ -308,6 +329,7 @@ def GenerateForExres(tree, scope, exp, table):
 
 
         elif len(tree.parts) == 1 and type(tree.parts[0]) == str:
+            print(tree)
             if table[scope].get(tree.parts[0]) != None:
                 typer = table[scope].get(tree.parts[0])[0]
                 tmp1 = new_temp(typeconv[typer])
@@ -355,6 +377,40 @@ def GenerateForExres(tree, scope, exp, table):
             exp.append((binary_ops[tree.type] + '_' + typeconv[typer], tmp1, name, ended))
             return ended
 
+        elif len(tree.parts) == 2 and type(tree.parts[1]) == str and type(
+                tree.parts[0]) != str:  # если первый операнд сложное выражение
+            if table[scope].get(tree.parts[1]) != None:
+                typer = table[scope].get(tree.parts[1])[0]
+                tmp1 = new_temp(typeconv[typer])
+                exp.append(('load_' + typeconv[typer], tree.parts[1], tmp1))
+            else:
+                if tree.parts[1].find('.') != -1:
+                    typer = 'real'
+                    value = float(tree.parts[1])
+                else:
+                    typer = 'integer'
+                    value = int(tree.parts[1])
+                tmp1 = new_temp(typeconv[typer])
+                exp.append(('literal_' + typeconv[typer], value, tmp1))
+            name = GenerateForExres(tree.parts[0], scope, exp, table)
+            if tmp1[2:5] != name[2:5] or tree.type == '/':
+                typer = 'real'
+                if tmp1[2:5] == 'int':
+                    tmp3 = new_temp('float')
+                    exp.append(('convert_to_float', tmp1 , tmp3))
+                    tmp1 = tmp3
+                if name[2:5] == 'int':
+                    tmp3 = new_temp('float')
+                    exp.append(('convert_to_float', name , tmp3))
+                    name = tmp3
+            if (tree.type in bool_ops):
+                ended = new_temp('bool')
+            else:
+                print(tree.type)
+                ended = new_temp(typeconv[typer])
+            exp.append((binary_ops[tree.type] + '_' + typeconv[typer], tmp1, name, ended))
+            return ended
+
         elif len(tree.parts) == 2 and type(tree.parts[0]) != str and type(
                 tree.parts[1]) != str:  # если оба являются сложными выражениями
             name = GenerateForExres(tree.parts[0], scope, exp, table)
@@ -374,11 +430,14 @@ def GenerateForExres(tree, scope, exp, table):
                 typer = 'boolean'
             if typer == 'flo':
                 typer = 'real'
+            if typer == 'int':
+                typer = 'integer'
             #print(typer)
             if (tree.type in bool_ops):
                 ended = new_temp('bool')
             else:
                 ended = new_temp(typeconv[typer])
+                exp.append((''))
             exp.append(((binary_ops[tree.type] + '_' + typeconv[typer]), name, name2, ended))
             return ended
 
@@ -398,7 +457,7 @@ def GenerateForExres(tree, scope, exp, table):
                 tmp1 = new_temp(typeconv[typer])
                 exp.append(('literal_' + typeconv[typer], value, tmp1))
             if table[scope].get(tree.parts[1]) != None:
-                typer = table[scope].get(tree.parts[0])[0]
+                typer = table[scope].get(tree.parts[1])[0]
                 tmp2 = new_temp(typeconv[typer])
                 exp.append(('load_' + typeconv[typer], tree.parts[1], tmp2))
             else:
@@ -429,6 +488,7 @@ def GenerateForExres(tree, scope, exp, table):
         else:
             for part in tree.parts:
                 end = GenerateForExres(part, scope, exp, table)
+    #print(tree)
     return end  # if type(part) is not str:
     # print(part.type)
     # else:
