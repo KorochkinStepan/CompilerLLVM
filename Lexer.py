@@ -146,6 +146,6 @@ end.
     lexer.input(data)
 
     while True:
-        tok = lexer.token()  # читаем следующий токен
-        if not tok: break  # закончились печеньки
+        tok = lexer.token()  
+        if not tok: break  
         print(tok)
