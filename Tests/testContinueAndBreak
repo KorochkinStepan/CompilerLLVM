@@ -1,0 +1,16 @@
+program Sqrt;
+var a,b,c : integer
+var h : real
+
+begin
+    while ( a < 20) do
+    begin
+        a := a+1;
+        if (( a = 10) or ( (a mod 2) = 1)) then
+            begin
+            continue
+            end;
+        write(a)
+    end
+
+end.
