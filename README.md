@@ -1,6 +1,6 @@
 # CompilerLLVM
-pip install ply
-pip install llvmlite
+pip install ply  
+pip install llvmlite  
 
 python -m run Tests/Filename 
 
