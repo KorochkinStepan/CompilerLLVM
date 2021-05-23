@@ -44,6 +44,7 @@ ident = r'[a-z]\w*'
 # для каждого токена из массива мы должны написать его определение вида t_ИМЯТОКЕНА = регулярка
 t_DIVIDE = r'\/'
 t_DOT = r'\.'
+t_COMPARE = r'\>\=|\<\=|\>|\<|\<\>'
 t_EQUAL = r'\='
 t_COLON = r'\:'
 t_ASSIGN = r'\:='
@@ -54,7 +55,7 @@ t_CLOSE = r'\)'
 t_NUM = r'\d+'
 t_PLUSMINUS = r'\+|\-'
 t_MULTIPLE = r'\*'
-t_COMPARE = r'\>|\<|\>=|\<=|\<>'
+
 t_REALNUM = r'\d+\.\d+'
 
 
@@ -111,34 +112,35 @@ lexer = lex.lex(reflags=re.UNICODE | re.DOTALL | re.IGNORECASE)
 
 if __name__ == "__main__":
     data = '''
-program Hello;
+program Sqrt;
 var a,b,c : integer
 var h : real
 
-procedure Tafa (a: integer); 
+function sqrt (a: integer) : real;
+   var b,c : integer
+   var d,e,f,g : real
    begin
-    write("fdsfsd")
+       c := b * b;
+       while ( c <= a ) do
+       begin
+            b := b + 1;
+            c := b * b
+       end;
+       b := b - 1;
+       d := a - b * b;
+       e := a * 2;
+       f := d / e;
+       g := b + f;
+       d := f * f;
+       e := 2 * g;
+       f := g - d / e;
+       sqrt := f
+
    end;
-function rrree(a:integer ; b : real): integer; 
 
 begin
-write("Function");
-rrree := 10
-end;
-
-begin
-
-    b := 1;
-    a := rrree(10 , 20.0);
-    c := (10 div 3);
-    write(a);
-    Tafa(10+10);
-    while (c < 12) do begin
-        c := c + 1;
-        a := c * a;
-        write(a)
-        end
-    
+    h := sqrt(4);
+    write(h)
 
 end.
     '''
@@ -146,6 +148,6 @@ end.
     lexer.input(data)
 
     while True:
-        tok = lexer.token()  
-        if not tok: break  
+        tok = lexer.token()  # читаем следующий токен
+        if not tok: break  # закончились печеньки
         print(tok)
