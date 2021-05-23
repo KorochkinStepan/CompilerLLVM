@@ -7,9 +7,9 @@ python -m run Tests/Filename
 В результате выполнения программы создается файл с расширением .ll , который можно  
 будет преобразовать в obj и запустить командами:
 
-llc -filetype=obj -relocation-model=pic Code.ll
-gcc Сode.o -o output
-./Code
+llc -filetype=obj -relocation-model=pic Code.ll  
+gcc Сode.o -o output  
+./Code  
 
 # Lexer.py
 Лексический анализатор , реализованный при помощи библиотеки ply
