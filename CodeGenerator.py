@@ -300,6 +300,12 @@ def GenerateForExres(tree, scope, exp, table):
                 p.append(tmp1)
             # print(p)
             return p
+        elif len(tree.parts) == 1 and type(tree.parts[0]) != str and tree.type == 'Not':
+            name = GenerateForExres(tree.parts[0], scope, exp, table)
+            ended = new_temp('bool')
+            exp.append(('not_bool', name, ended))
+            return ended
+
 
         elif len(tree.parts) == 1 and type(tree.parts[0]) == str:
             if table[scope].get(tree.parts[0]) != None:
