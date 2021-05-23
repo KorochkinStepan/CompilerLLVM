@@ -1,11 +1,10 @@
 from llvmlite import binding, ir
 from llvmlite.ir import (
     Module, IRBuilder, Function, IntType, DoubleType, VoidType, Constant,
-    GlobalVariable, FunctionType , ArrayType , MetaDataType
+    GlobalVariable, FunctionType , ArrayType
 )
 from CodeGenerator import GenerateCode, Block, prTr
-from collections import defaultdict
-from Parser import build_tree, getTable
+from Parser import build_tree
 
 int_type = IntType(32)
 float_type = DoubleType()
@@ -188,10 +187,21 @@ class GenerateLLVM(object):
         self.temps[target] = self.builder.sdiv(
             self.temps[left], self.temps[right], target)
 
+    def emit_mod_int(self, left, right, target):
+        self.temps[target] = self.builder.srem(
+            self.temps[left], self.temps[right], target)
+
+    def emit_mod_float(self, left, right, target):
+        self.temps[target] = self.builder.frem(
+            self.temps[left], self.temps[right], target)
+
+
     def emit_div_float(self, left, right, target):
         self.temps[target] = self.builder.fdiv(
             self.temps[left], self.temps[right], target)
 
+    def emit_convert_to_float(self, source, target):
+        self.temps[target] = self.builder.sitofp(self.temps[source],DoubleType(),name=target)
 
     def emit_uadd_int(self, source, target):
         self.temps[target] = self.builder.add(
@@ -312,7 +322,7 @@ class GenerateLLVM(object):
         self.locals[name] = var
 
     def emit_parm_float(self, name, num):
-        print(name, num)
+        #print(name, num)
         var = self.builder.alloca(float_type, name=name)
         self.builder.store(self.function.args[num], var)
         self.locals[name] = var
@@ -332,6 +342,18 @@ class GenerateLLVM(object):
 
     def emit_return_void(self):
         self.branch(self.exit_block)
+
+    def emit_print_float(self, source):
+        value = self.temps[source]
+        voidprt_ty = IntType(8).as_pointer()
+        fmt = "%f \n\0"
+        c_fmt = Constant(ArrayType(IntType(8), len(fmt)), bytearray(fmt.encode("utf8")))
+        global_fmt = GlobalVariable(self.module, c_fmt.type, name=source)
+        global_fmt.linkage = 'internal'
+        global_fmt.global_constant = True
+        global_fmt.initializer = c_fmt
+        fmt_arg = self.builder.bitcast(global_fmt, voidprt_ty)
+        self.builder.call(self.printf, [fmt_arg, value])
 
     def emit_print_int(self, source):
         value = self.temps[source]
@@ -362,19 +384,8 @@ class GenerateBlocksLLVM( object ):
     def partition(self, block):
         for i in block.instructions:
             if i.__class__ == tuple:
-                if i[0] == 'break':
-                    afterloopik = afterloops.pop()[0]
-                    self.gen.branch(afterloopik)
-                    print([i])
-                    return
-                elif i[0] == 'continue':
-                    afterloopik = afterloops.pop()[1]
-                    self.gen.branch(afterloopik)
-                    print([i])
-                    return
-                else:
-                    print([i])
-                    self.visit_BasicBlock([i])
+                #print([i])
+                self.visit_BasicBlock([i])
             elif i.head == 'IfBlock':
                 self.visit_IfBlock(i)
             elif i.head == 'WhileBlock':
@@ -413,7 +424,7 @@ class GenerateBlocksLLVM( object ):
         endblock = self.gen.add_block("endblock")
 
         testvar = block.instructions[0].instructions[len(block.instructions[0].instructions)-1][len(block.instructions[0].instructions[len(block.instructions[0].instructions)-1])-1]
-        print(testvar)
+        #print(testvar)
 
         self.gen.cbranch(testvar, tblock, fblock)
 
@@ -428,7 +439,6 @@ class GenerateBlocksLLVM( object ):
 
     def visit_WhileBlock(self, block):
         test_block = self.gen.add_block("whiletest")
-
         testvar = block.instructions[0].instructions[len(block.instructions[0].instructions) - 1][len(block.instructions[0].instructions[len(block.instructions[0].instructions) - 1]) - 1]
         self.gen.branch(test_block)
         self.gen.set_block(test_block)
@@ -438,24 +448,20 @@ class GenerateBlocksLLVM( object ):
         loop_block = self.gen.add_block("loop")
         after_loop = self.gen.add_block("afterloop")
 
-        afterloops.append([after_loop,test_block]) # добавляем названия label'ов для break и continue
-
         self.gen.cbranch(testvar, loop_block, after_loop)
 
         self.gen.set_block(loop_block)
-
         self.partition(block.instructions[1])
         self.gen.branch(test_block)
-        print('______________________')
 
         self.gen.set_block(after_loop)
-afterloops =[]
+
 def compile_llvm(source):
 
 
 
     functions = source.instructions
-    print(functions)
+    #print(functions)
     generator = GenerateLLVM()
     blockgen = GenerateBlocksLLVM(generator)
     for func in functions:
@@ -466,7 +472,6 @@ def compile_llvm(source):
 
 
 def main():
-    import sys
     data = '''
     program Hello;
     var a,b,c : integer
