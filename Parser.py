@@ -347,7 +347,39 @@ def getTable(code):
 
 
 def main():
-    print('ничего')
+    data = '''
+    program Factorials;
+    var a,b,c : integer
+    var h : real
+
+    function factorial (a: integer) : integer;
+       var num,c,d,e : integer
+       begin
+           num := 1;
+           e := 1;
+           while ( e < a ) do
+           begin
+                num := num * e;
+                e := e + 1
+           end;
+           factorial := num
+       end;
+
+    begin
+        write("the first b factorials");
+        b := 10;
+        a := 1;
+        while ( a <= b) do
+        begin
+            c := factorial(a);
+            write(c);
+            a := a+1
+        end
+
+    end.
+        '''
+
+    print(build_tree(data))
 
 if __name__ == '__main__':
     main()
