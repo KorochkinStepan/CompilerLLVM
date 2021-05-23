@@ -329,7 +329,7 @@ def GenerateForExres(tree, scope, exp, table):
 
 
         elif len(tree.parts) == 1 and type(tree.parts[0]) == str:
-            print(tree)
+            #print(tree)
             if table[scope].get(tree.parts[0]) != None:
                 typer = table[scope].get(tree.parts[0])[0]
                 tmp1 = new_temp(typeconv[typer])
