@@ -48,6 +48,9 @@ def main():
     print("\n---------------------TREE-ADDRESS CODE---------------------")
     prTr(bloc, 1)
     llvm_code = compile_llvm(bloc)
+    with open('Code.ll', 'wb') as f:
+        f.write(llvm_code.encode('utf-8'))
+        f.flush()
     print("\n---------------------LLVM CODE---------------------")
     print(llvm_code)
     print("\n---------------------RUNNING THE PROGRAMM--------------------")
