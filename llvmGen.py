@@ -384,8 +384,19 @@ class GenerateBlocksLLVM( object ):
     def partition(self, block):
         for i in block.instructions:
             if i.__class__ == tuple:
-                #print([i])
-                self.visit_BasicBlock([i])
+                if i[0] == 'break':
+                    afterloopik = afterloops.pop()[0]
+                    self.gen.branch(afterloopik)
+                    print([i])
+                    return
+                elif i[0] == 'continue':
+                    afterloopik = afterloops.pop()[1]
+                    self.gen.branch(afterloopik)
+                    print([i])
+                    return
+                else:
+                    print([i])
+                    self.visit_BasicBlock([i])
             elif i.head == 'IfBlock':
                 self.visit_IfBlock(i)
             elif i.head == 'WhileBlock':
@@ -447,6 +458,7 @@ class GenerateBlocksLLVM( object ):
 
         loop_block = self.gen.add_block("loop")
         after_loop = self.gen.add_block("afterloop")
+        afterloops.append([after_loop, test_block])  # добавляем названия label'ов для break и continue
 
         self.gen.cbranch(testvar, loop_block, after_loop)
 
@@ -455,7 +467,7 @@ class GenerateBlocksLLVM( object ):
         self.gen.branch(test_block)
 
         self.gen.set_block(after_loop)
-
+afterloops =[]
 def compile_llvm(source):
 
 
