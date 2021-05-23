@@ -3,9 +3,9 @@ import ctypes
 import sys
 
 import llvmlite.binding as llvm
-from old.CodeGenerator import Block, GenerateCode, prTr
+from CodeGenerator import Block, GenerateCode, prTr
 
-from old.Parser import build_tree, getTable
+from Parser import build_tree, getTable
 
 
 def run(llvm_ir):
@@ -28,7 +28,7 @@ def run(llvm_ir):
 
 
 def main():
-    from old.llvmGen import compile_llvm
+    from llvmGen import compile_llvm
 
     if len(sys.argv) != 2:
         sys.stderr.write("Usage: python3 -m run Tests/filename\n")
